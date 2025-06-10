@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مدیریت تولید محتوای اشتراکی</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Vazirmatn', sans-serif; }
+        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.6) brightness(1.5); }
+        select:invalid { color: #9ca3af; }
+        .modal-content::-webkit-scrollbar { width: 8px; }
+        .modal-content::-webkit-scrollbar-track { background: #1f2937; }
+        .modal-content::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px; }
+        .modal-content::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+    </style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen p-4 sm:p-6 md:p-8">
+
+    <div id="loader" class="fixed inset-0 bg-gray-900 flex justify-center items-center z-50">...درحال بارگذاری و اتصال به فضای کاری مشترک</div>
+
+    <div class="max-w-7xl mx-auto">
+        <header class="text-center mb-12">
+            <h1 class="text-4xl sm:text-5xl font-bold text-cyan-400">سیستم مدیریت تولید محتوا</h1>
+            <p class="text-lg text-gray-400 mt-2">برنامه‌ریزی و ساخته شده توسط رامز نوری</p>
+        </header>
+
+        <div class="bg-gray-800 p-6 rounded-2xl shadow-lg mb-12">
+            <h2 id="form-title" class="text-2xl font-bold mb-6 text-cyan-300">افزودن محتوای جدید</h2>
+            
+            <form id="content-form" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+                <input type="text" id="عنوان_محتوا" placeholder="عنوان محتوا" required class="w-full p-3 bg-gray-700 rounded-lg border border-gray-600 focus:ring-cyan-500 focus:border-cyan-500"/>
+                <select id="وضعیت" required class="w-full p-3 bg-gray-700 rounded-lg border border-gray-600 focus:ring-cyan-500 focus:border-cyan-500">
+                    <option value="" disabled selected>انتخاب مرحله...</option>
+                </select>
+                <select id="اقدام_بعدی" class="w-full p-3 bg-gray-700 rounded-lg border border-gray-600 focus:ring-cyan-500 focus:border-cyan-500">
+                    <option value="">انتخاب اقدام بعدی...</option>
+                </select>
+                <input type="date" id="تاریخ_انتشار" placeholder="تاریخ بازنگری" class="w-full p-3 bg-gray-700 rounded-lg border border-gray-600 focus:ring-cyan-500 focus:border-cyan-500" />
+                <select id="پلتفرم_اصلی" required class="w-full p-3 bg-gray-700 rounded-lg border border-gray-600 focus:ring-cyan-500 focus:border-cyan-500">
+                    <option value="" disabled selected>انتخاب پلتفرم...</option>
+                </select>
+
+                <select id="فرمت_محتوا" class="w-full p-3 bg-gray-700 rounded-lg border border-gray-600 focus:ring-cyan-500 focus:border-cyan-500">
+                    <option value="">انتخاب فرمت...</option>
+                </select>
+                <select id="هدف_اصلی" required class="w-full p-3 bg-gray-700 rounded-lg border border-gray-600 focus:ring-cyan-500 focus:border-cyan-500">
+                    <option value="" disabled selected>انتخاب هدف...</option>
+                </select>
+                <select id="قیف" class="w-full p-3 bg-gray-700 rounded-lg border border-gray-600 focus:ring-cyan-500 focus:border-cyan-500">
+                    <option value="">انتخاب مرحله قیف...</option>
+                </select>
+                <input type="text" id="منبع" placeholder="منبع" class="w-full p-3 bg-gray-700 rounded-lg border border-gray-600 focus:ring-cyan-500 focus:border-cyan-500"/>
+                <input type="text" id="CTA" placeholder="فراخوان به اقدام (CTA)" class="w-full p-3 bg-gray-700 rounded-lg border border-gray-600 focus:ring-cyan-500 focus:border-cyan-500"/>
+                
+                <div class="sm:col-span-2 lg:col-span-5 space-y-4">
+                    <input type="url" id="لینک_نهایی" placeholder="لینک نهایی" class="w-full p-3 bg-gray-700 rounded-lg border border-gray-600 focus:ring-cyan-500 focus:border-cyan-500"/>
+                    <textarea id="یادداشت" placeholder="یادداشت..." class="w-full p-3 bg-gray-700 rounded-lg border border-gray-600 focus:ring-cyan-500 focus:border-cyan-500 h-24"></textarea>
+                </div>
+                
+                <div class="sm:col-span-2 lg:col-span-5 flex justify-end items-center gap-4">
+                    <button type="button" id="cancel-edit-btn" class="py-2 px-6 bg-gray-600 hover:bg-gray-500 rounded-lg transition-colors hidden">لغو ویرایش</button>
+                    <button type="submit" id="submit-btn" class="py-2 px-8 bg-cyan-500 hover:bg-cyan-600 text-black font-bold rounded-lg transition-colors shadow-md shadow-cyan-500/20">افزودن</button>
+                </div>
+            </form>
+        </div>
+        
+        <div class="bg-gray-800 p-6 rounded-2xl shadow-lg">
+            <h2 class="text-2xl font-bold mb-6 text-cyan-300">محتواهای ثبت شده</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-right text-gray-300">
+                    <thead class="text-xs text-cyan-400 uppercase bg-gray-700/50">
+                        <tr>
+                            <th class="p-4">عنوان</th><th class="p-4">وضعیت</th><th class="p-4">اقدام بعدی</th>
+                            <th class="p-4">تاریخ بازنگری</th><th class="p-4">پلتفرم</th><th class="p-4">عملیات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="content-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="preview-modal" class="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-40 hidden">
+        <div class="bg-gray-800 rounded-2xl shadow-xl w-11/12 md:w-2/3 lg:w-1/2 max-h-[85vh] flex flex-col">
+            <header class="p-4 border-b border-gray-700 flex justify-between items-center">
+                <h3 id="preview-title" class="text-xl font-bold text-cyan-400">پیش‌نمایش محتوا</h3>
+                <button id="close-modal-btn" class="text-gray-400 hover:text-white text-3xl leading-none">&times;</button>
+            </header>
+            <div id="preview-content" class="p-6 space-y-3 overflow-y-auto modal-content text-right">
+                </div>
+            <footer class="p-4 border-t border-gray-700 text-center">
+                 <a id="preview-link" href="#" target="_blank" rel="noopener noreferrer" class="py-2 px-6 bg-cyan-500 hover:bg-cyan-600 text-black font-bold rounded-lg transition-colors">مشاهده لینک نهایی</a>
+            </footer>
+        </div>
+    </div>
+
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDlViODkVZ3si9uik_mqNxmPl5KMBTV0KY",
+            authDomain: "mohtava-4f5a4.firebaseapp.com",
+            projectId: "mohtava-4f5a4",
+            storageBucket: "mohtava-4f5a4.firebasestorage.app",
+            messagingSenderId: "226128861837",
+            appId: "1:226128861837:web:2d53367597616d8c0da0c4"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        let isEditing = null;
+
+        // ===============================================
+        //  تغییر اصلی اینجاست. مسیر داده‌ها اصلاح شد
+        // ===============================================
+        const collectionPath = 'shared_content_items';
+
+
+        // DOM Elements for Modal
+        const previewModal = document.getElementById('preview-modal');
+        const previewTitle = document.getElementById('preview-title');
+        const previewContent = document.getElementById('preview-content');
+        const previewLink = document.getElementById('preview-link');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+
+        // General DOM Elements
+        const form = document.getElementById('content-form');
+        const tableBody = document.getElementById('content-table-body');
+        const formTitle = document.getElementById('form-title');
+        const submitBtn = document.getElementById('submit-btn');
+        const cancelEditBtn = document.getElementById('cancel-edit-btn');
+        const loader = document.getElementById('loader');
+        
+        const formFields = [
+            "عنوان_محتوا", "وضعیت", "اقدام_بعدی", "تاریخ_انتشار", "پلتفرم_اصلی",
+            "فرمت_محتوا", "هدف_اصلی", "قیف", 
+            "منبع", "CTA", "لینک_نهایی", "یادداشت"
+        ];
+        
+        const dependencyData = {
+          "وضعیت": {"ایده": ["تحقیق اولیه و اعتبارسنجی", "تعیین هدف و پلتفرم", "تایید نهایی ایده", "آماده برای تولید"], "تولید": ["۱- نگارش اولیه", "۲- تولید محتوای اصلی", "۳- ویرایش و بازبینی", "۴- آماده‌سازی نهایی", "تکمیل شده و آماده انتشار"], "انتشار": ["زمان‌بندی شده", "منتشر شد", "بررسی پس از انتشار"], "ترویج": ["ترویج در استوری اینستاگرام", "ارسال در کانال تلگرام", "لینک‌سازی در مقالات سایت", "شروع کمپین تبلیغاتی", "ترویج تکمیل شد"],"بایگانی": ["بررسی عملکرد", "نیازمند به‌روزرسانی", "مناسب برای بازآفرینی", "حذف/ریدایرکت شود", "نگهداری بدون تغییر"]},
+          "پلتفرم": {"اینستاگرام": ["پست اسلایدی", "ریلز", "استوری", "لایو"], "یوتیوب": ["ویدیوی آموزشی", "Shorts"], "سایت": ["مقاله", "ایبوک", "چک لیست", "لندینگ پیج"], "تلگرام": ["پست متنی", "پست صوتی", "پادکست"]},
+          "هدف": {"آگاهی_از_برند": ["بالای قیف"], "تعامل_یا_لید": ["وسط قیف"], "فروش": ["پایین قیف"]},
+          "قیف": {"بالای_قیف": ["آموزشی و راهنمامحور", "سرگرم‌کننده و الهام‌بخش", "جذاب و ویروسی", "داستان‌سرایی"], "وسط_قیف": ["اثبات اجتماعی و مطالعه موردی", "تخصصی و عمیق", "مقایسه‌ای و بررسی", "پشت صحنه و شفاف‌سازی"], "پایین_قیف": ["فروش مستقیم و معرفی محصول", "پیشنهاد ویژه و محدود", "پرسش و پاسخ و رفع ابهام", "فراخوان به اقدام فوری"]}
+        };
+
+        function populateSelect(selectId, options) {
+            const select = document.getElementById(selectId);
+            const currentValue = select.value;
+            select.innerHTML = `<option value="" disabled ${currentValue ? '' : 'selected'}>${select.firstElementChild.textContent}</option>`;
+            options.forEach(opt => {
+                const optionEl = document.createElement('option');
+                optionEl.value = opt;
+                optionEl.textContent = opt.replace(/_/g, ' ');
+                select.appendChild(optionEl);
+            });
+            select.value = currentValue;
+        }
+
+        function updateDependencies() {
+            const data = getFormData();
+            populateSelect('اقدام_بعدی', dependencyData.وضعیت[data.وضعیت] || []);
+            populateSelect('فرمت_محتوا', dependencyData.پلتفرم[data.پلتفرم_اصلی] || []);
+            populateSelect('قیف', dependencyData.هدف[data.هدف_اصلی] || []);
+        }
+
+        function getFormData() {
+            const data = {};
+            formFields.forEach(id => {
+                data[id] = document.getElementById(id).value;
+            });
+            return data;
+        }
+        
+        function resetForm() {
+            form.reset();
+            isEditing = null;
+            formTitle.textContent = 'افزودن محتوای جدید';
+            submitBtn.textContent = 'افزودن';
+            cancelEditBtn.classList.add('hidden');
+            updateDependencies();
+             window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        
+        function renderTable(items) {
+            tableBody.innerHTML = '';
+            if (items.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="6" class="text-center p-8">هنوز محتوایی اضافه نشده است.</td></tr>';
+                return;
+            }
+            items.forEach(item => {
+                const row = document.createElement('tr');
+                row.className = "bg-gray-800 border-b border-gray-700 hover:bg-gray-700/50 transition-colors";
+                row.innerHTML = `
+                    <td class="p-4 font-bold">${item['عنوان_محتوا'] || ''}</td>
+                    <td class="p-4"><span class="px-2 py-1 bg-cyan-900/50 text-cyan-300 rounded-full">${item['وضعیت'] || ''}</span></td>
+                    <td class="p-4 text-gray-400">${item['اقدام_بعدی'] || ''}</td>
+                    <td class="p-4">${item['تاریخ_انتشار'] || ''}</td>
+                    <td class="p-4">${item['پلتفرم_اصلی'] || ''}</td>
+                    <td class="p-4 flex gap-3 flex-wrap">
+                        <button onclick="handlePreview('${item.id}')" class="text-green-400 hover:text-green-300">پیش‌نمایش</button>
+                        <button onclick="handleEdit('${item.id}')" class="text-yellow-400 hover:text-yellow-300">ویرایش</button>
+                        <button onclick="handleDelete('${item.id}')" class="text-red-500 hover:text-red-400">حذف</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+        
+        window.handlePreview = (id) => {
+            const item = window.contentItems.find(i => i.id === id);
+            if (!item) return;
+
+            const createDetailRow = (label, value) => {
+                if (!value) return ''; 
+                return `<div class="py-2 px-3 bg-gray-700/50 rounded-lg flex justify-between items-center">
+                            <strong class="text-cyan-300">${label}:</strong>
+                            <span class="text-gray-200">${value}</span>
+                        </div>`;
+            };
+            
+             const createDetailBlock = (label, value) => {
+                if (!value) return '';
+                return `<div class="py-2 px-3 bg-gray-700/50 rounded-lg">
+                            <strong class="text-cyan-300 mb-2 block">${label}:</strong>
+                            <p class="text-gray-200 whitespace-pre-wrap">${value}</p>
+                        </div>`;
+            };
+
+            previewTitle.textContent = `پیش‌نمایش: ${item['عنوان_محتوا']}`;
+
+            previewContent.innerHTML = `
+                ${createDetailRow('وضعیت', item['وضعیت'])}
+                ${createDetailRow('اقدام بعدی', item['اقدام_بعدی'])}
+                ${createDetailRow('تاریخ بازنگری', item['تاریخ_انتشار'])}
+                <hr class="border-gray-600 my-3">
+                ${createDetailRow('پلتفرم اصلی', item['پلتفرم_اصلی'])}
+                ${createDetailRow('فرمت محتوا', item['فرمت_محتوا'])}
+                <hr class="border-gray-600 my-3">
+                ${createDetailRow('هدف اصلی', item['هدف_اصلی']?.replace(/_/g, ' '))}
+                ${createDetailRow('مرحله قیف', item['قیف']?.replace(/_/g, ' '))}
+                <hr class="border-gray-600 my-3">
+                ${createDetailRow('منبع', item['منبع'])}
+                ${createDetailRow('فراخوان به اقدام (CTA)', item['CTA'])}
+                ${createDetailBlock('یادداشت', item['یادداشت'])}
+            `;
+            
+            if (item['لینک_نهایی']) {
+                previewLink.href = item['لینک_نهایی'];
+                previewLink.parentElement.classList.remove('hidden');
+            } else {
+                previewLink.parentElement.classList.add('hidden');
+            }
+
+            previewModal.classList.remove('hidden');
+        };
+
+        closeModalBtn.addEventListener('click', () => previewModal.classList.add('hidden'));
+        previewModal.addEventListener('click', (e) => {
+            if (e.target.id === 'preview-modal') {
+                previewModal.classList.add('hidden');
+            }
+        });
+
+        window.handleEdit = (id) => {
+            const item = window.contentItems.find(i => i.id === id);
+            if (!item) return;
+            isEditing = id;
+            formFields.forEach(fieldId => {
+                document.getElementById(fieldId).value = item[fieldId] || '';
+            });
+            updateDependencies();
+            formTitle.textContent = 'ویرایش محتوا';
+            submitBtn.textContent = 'بروزرسانی';
+            cancelEditBtn.classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+        
+        window.handleDelete = async (id) => {
+            if (confirm('آیا از حذف این آیتم مطمئن هستید؟')) {
+                await db.collection(collectionPath).doc(id).delete();
+            }
+        };
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const dataToSave = getFormData();
+            if (isEditing) {
+                await db.collection(collectionPath).doc(isEditing).update(dataToSave);
+            } else {
+                await db.collection(collectionPath).add(dataToSave);
+            }
+            resetForm();
+        });
+
+        cancelEditBtn.addEventListener('click', resetForm);
+        
+        form.addEventListener('change', (e) => {
+            if (e.target.tagName === 'SELECT') {
+                updateDependencies();
+            }
+        });
+        
+        db.collection(collectionPath).orderBy("تاریخ_انتشار", "desc").onSnapshot(snapshot => {
+            window.contentItems = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            renderTable(window.contentItems);
+            loader.classList.add('hidden');
+        }, error => {
+            console.error("خطا در اتصال به پایگاه داده:", error);
+            loader.textContent = "خطا در اتصال به پایگاه داده. لطفاً از صحت اطلاعات Firebase و فعال بودن Firestore اطمینان حاصل کنید.";
+        });
+
+
+        document.addEventListener('DOMContentLoaded', () => {
+            populateSelect('وضعیت', Object.keys(dependencyData.وضعیت));
+            populateSelect('پلتفرم_اصلی', Object.keys(dependencyData.پلتفرم));
+            populateSelect('هدف_اصلی', Object.keys(dependencyData.هدف));
+        });
+
+    </script>
+</body>
+</html>
